@@ -9,6 +9,10 @@ using namespace std;
 
 size_t write_to_string(void *ptr, size_t size, size_t nmemb, void *stream) {
     size_t total_size = size * nmemb;
+    if (ptr == NULL) {
+        std::cerr << "Error: NULL response from curl" << std::endl;
+        exit(3);
+    }
     std::string *response = (std::string *) stream;
     response->append((char *) ptr, total_size);
     return total_size;
@@ -16,15 +20,16 @@ size_t write_to_string(void *ptr, size_t size, size_t nmemb, void *stream) {
 std::string API(const string& name){
   char* ApiKey = getenv(name.c_str());
   if (ApiKey == NULL) {
-    //std::cerr << "Error: API_KEY environment variable is not set." << std::endl;
-	return std::string("YOUR_API_KEY");
+    std::cerr << "Error: " << name << " environment variable is not set." << std::endl;
+    exit(1);
   }
   return ApiKey;
 }
+
 int main(int argc, char** argv) {
   // Initialize CURL library
 	std::vector<std::string> header_string = { 
-		"Authorization: Bearer " + API("API_KEY"),
+		"Authorization: Bearer " + API("OPENAI_API_KEY"),
 		"max_tokens: 256"
 	};
   CURL *curl = curl_easy_init();
@@ -77,7 +82,6 @@ int main(int argc, char** argv) {
   nlohmann::json response_json = nlohmann::json::parse(response);
   std::string answer = response_json["choices"][0]["text"];
 
-  answer.erase(std::remove(answer.begin(), answer.end(), '\n'), answer.end());
   // Print the answer
   std::cout << answer << std::endl;
   // Clean up
