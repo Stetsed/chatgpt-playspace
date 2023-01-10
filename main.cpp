@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
   // Initialize CURL library
 	std::vector<std::string> header_string = { 
 		"Authorization: Bearer " + API("OPENAI_API_KEY"),
-		"max_tokens: 256"
+		"max_tokens: 512"
 	};
   CURL *curl = curl_easy_init();
   if (!curl) {
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
     std::getline(std::cin, question);
   }
   // Set the request body to the user's question
-  std::string request_body = "{\"max_tokens\":1000,\"prompt\": [\"" + question + "\"]}";
+  std::string request_body = "{\"max_tokens\":512,\"prompt\": [\"" + question + "\"]}";
   curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_body.c_str());
 
   // Set the headers
@@ -77,6 +77,12 @@ int main(int argc, char** argv) {
   if (res != CURLE_OK) {
     std::cerr << "Error making request: " << curl_easy_strerror(res) << std::endl;
     return 1;
+  }
+  long http_code = 0;
+  curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+  if (http_code >= 400) {
+      std::cerr << "Error, HTTP response code: " << http_code << std::endl;
+     return 1;
   }
   // Parse the response
   nlohmann::json response_json = nlohmann::json::parse(response);
